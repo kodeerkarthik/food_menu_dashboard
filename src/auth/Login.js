@@ -2,7 +2,7 @@ import PanelHeader from 'components/PanelHeader/PanelHeader';
 import React, { Component } from 'react';
 import {Card,CardBody,CardHeader,CardFooter,CardTitle,Row,Col,Form,FormGroup, Input} from "reactstrap";
 import './auth.css';
-import { Link } from "react-router-dom";
+import LoadingOverlay from 'react-loading-overlay';
 import api from '../api/index'
 import history from '../api/history'
 
@@ -12,18 +12,21 @@ class Login extends Component {
 		this.state={
 			email:'',
 			password:'',
+			isActive:false
 		}
 	}
 
 	login = (e) => {
 		e.preventDefault();
-		console.log(this.state);
+		this.setState({isActive:true})
 		api.post('Signin', this.state).then(res=>{
 			sessionStorage.setItem('token',res.data?.token)
 			sessionStorage.setItem('userId',res.data?.userId)
 			history.push('/admin/user-page')
+			this.setState({isActive:false})
 		}).catch(err=>{
 			console.log(err)
+			this.setState({isActive:false})
 		})
 	}
 	handleChange = (e) =>{
@@ -32,6 +35,7 @@ class Login extends Component {
 	render() {
 		return (
 			<>
+			<LoadingOverlay active={this.state.isActive} spinner text='Please wait...'>
 				<PanelHeader size="sm"/>
 				{/* <div className="content "> */}
 					<Row className='m-0'>
@@ -60,7 +64,7 @@ class Login extends Component {
 							</Card>					
 						</Col>
 					</Row>
-				{/* </div> */}
+				</LoadingOverlay>
 			</>
 		);
 	}

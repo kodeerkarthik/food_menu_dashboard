@@ -7,6 +7,7 @@ import Fade from '@material-ui/core/Fade';
 import {Card,CardBody,CardHeader,CardFooter,CardTitle,Row,Col,UncontrolledDropdown, Input} from "reactstrap";
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import api from '../api/index'
+import LoadingOverlay from 'react-loading-overlay';
 
 const useStyles = makeStyles((theme) => ({
   modal: {
@@ -30,7 +31,7 @@ function Category() {
   const [newopen, setNewopen] = React.useState(false);
   const [isEnable, setIsenable] = useState(false);
   const [category, setCategory] = useState([]);
-  // const [isAdd, setIsadd] = useState(false);
+  const [isActive, setIsactive] = useState(false);
   const [id, setId] = useState('');
   const handleEdit = (data) => {
     setUname(data.Add_category);
@@ -38,14 +39,30 @@ function Category() {
     setOpen(true)
   }
 
+  const handleActive = (e,id)=>{
+    setIsactive(true)
+    const formData = new FormData();
+    formData.append('Enable_disable',e.target.checked);
+    api.post('enable_category/'+id, formData).then(res=>{
+      setIsactive(false)
+      getallCategory();
+    }).catch(err=>{
+      console.log(err)
+      setIsactive(false)
+    })
+  }
+
   useEffect(() => {
     getallCategory();
   },[]);
 
   const getallCategory = () => {
-    api.get('/get_menu').then(res=>{
+    setIsactive(true)
+    api.get('get_menu').then(res=>{
+      setIsactive(false)
       setCategory(res.data?.user);
     }).catch(err=>{
+      setIsactive(false)
       console.log(err)
     })
   }
@@ -54,38 +71,46 @@ function Category() {
     const formData = new FormData();
     formData.append("Add_category", name);
     if(name!=null || name!= ''){
+      setIsactive(true)
       api.post('/add_category', formData).then(res=>{
         console.log(res);
         setNewopen(false)
         setName('')
+        setIsactive(false)
         getallCategory();
       }).catch(err=>{
         console.log(err)
+        setIsactive(false)
       })
     }
   }
   const handleUpdate = () => {
     const formData = new FormData()
     formData.append('Add_category', uName);
+    setIsactive(true)
     api.post('update_menu/'+id,formData).then(res=>{
       setOpen(false)
       getallCategory();
-      console.log(res);
+      setIsactive(false)
     }).catch(err=>{
       console.log(err)
+      setIsactive(false)
     })
   }
 
   const handleDelete = (id) =>{
+    setIsactive(true)
     api.delete('delete_menu/'+id).then(res=>{
       getallCategory();
-      console.log(res)
+      setIsactive(false)
     }).catch(err=>{
       console.log(err)
+      setIsactive(false)
     })
   }
   return (
     <>
+      <LoadingOverlay active={isActive} spinner text='Please wait...'>
       <PanelHeader size="sm"/>
       <div className="content">
         <Row>
@@ -123,7 +148,7 @@ function Category() {
                       <tr>
                         <td className='text-center'>{index+1}</td>
                         <td className='text-center'>{data.Add_category}</td>
-                        <td className='text-center'><Switch defaultChecked/></td>
+                        <td className='text-center'><Switch checked={data.Enable_disable} onChange={(e)=>handleActive(e,data._id)}/></td>
                         <td className='text-center text-success'><i class="fas fa-edit" onClick={()=>handleEdit(data)}/></td>
                         <td className='text-center text-danger' onClick={()=>handleDelete(data._id)}><fa-icon class="fas fa-trash" color='red'/></td>
                       </tr>)}
@@ -173,6 +198,7 @@ function Category() {
         </Fade>
       </Modal>
       </div>
+      </LoadingOverlay>
     </>
   );
 }

@@ -3,6 +3,7 @@ import { Input} from "reactstrap";
 import {FormControl,FormControlLabel,InputLabel,Select,Switch, MenuItem} from '@material-ui/core';
 import api from '../api/index'
 import history from '../api/history'
+import LoadingOverlay from 'react-loading-overlay';
 
 class EditItems extends Component {
     constructor(props) {
@@ -15,7 +16,8 @@ class EditItems extends Component {
             Items_price:'',
             Veg_NonVeg:false,
             category:[],
-            data:{}
+            data:{},
+            isActive:false
         }
     }
 
@@ -24,23 +26,32 @@ class EditItems extends Component {
         this.props?.id && this.getItemById(this.props?.id)
     }
     getItemById=(id)=>{
+        this.setState({isActive:true})
         api.get('get_single_item/'+id).then(res=>{
             this.setState(res.data)
+            this.setState({isActive:false})
         }).catch(err=>{
-
+            this.setState({isActive:false})
         })
     }
     getallCategory=()=>{
+        this.setState({isActive:true})
         api.get('/get_menu').then(res=>{
             this.setState({category:res.data?.user});
+            this.setState({isActive:false})
         }).catch(err=>{
             console.log(err)
+            this.setState({isActive:false})
         })
     }
     handleChange=(e)=>{
         this.setState({[e.target.name]:e.target.value})
     }
+    fileChange=(e)=>{
+        this.setState({Items_Img: e.target.files[0] })
+    }
     handleSubmit=()=>{
+        this.setState({isActive:true})
         const formData = new FormData();
         formData.append("Add_items", this.state.Add_items);
         formData.append("Category", this.state.Category);
@@ -51,11 +62,14 @@ class EditItems extends Component {
         api.post('/add_items', formData).then(res=>{
             this.props.reset();
             this.props.close(false)
+            this.setState({isActive:false})
           }).catch(err=>{
             console.log(err)
+            this.setState({isActive:false})
         })
     }
     handleUpdate=()=>{
+        this.setState({isActive:true})
         const formData = new FormData();
         formData.append("Add_items", this.state.Add_items);
         formData.append("Category", this.state.Category);
@@ -66,13 +80,15 @@ class EditItems extends Component {
         api.post('/update_item/'+this.props?.id, formData).then(res=>{
             this.props.reset();
             this.props.close(false)
+            this.setState({isActive:false})
         }).catch(err=>{
             console.log(err)
+            this.setState({isActive:false})
         })
     }
     render() {
         return (
-            <div>
+            <LoadingOverlay active={this.state.isActive} spinner text='Please wait...'>
                 <Input type='text' className='mb-3'
                  name='Add_items' placeholder="Item name" value={this.state.Add_items}
                  onChange={this.handleChange}
@@ -105,13 +121,14 @@ class EditItems extends Component {
                     onChange={(e)=>this.setState({Veg_NonVeg:e.target.checked})}/>                }
                     label="IsVeg?"
                 />
-                {this.props?.id && <br/>}
-                {!this.props?.id && 
-                <Input className='mb-3' type='file' name='Items_Img'  onChange={this.handleChange}/>}
+                <br/>
+                {/* {this.props?.id && <br/>} */}
+                {/* {!this.props?.id && 
+                <Input className='mb-3' type='file' name='Items_Img'  onChange={this.fileChange}/>} */}
                 {this.props?.id?<button className='btn btn-sm btn-info' 
                 onClick={this.handleUpdate}>Update</button>:
                 <button className='btn btn-sm btn-info' onClick={this.handleSubmit}>Add</button>}
-            </div>
+            </LoadingOverlay>
         );
     }
 }

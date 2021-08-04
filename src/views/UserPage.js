@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import {Button,Card,CardHeader,CardBody,FormGroup,Form,Input,Row,Col,} from "reactstrap";
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import api from '../api/index'
-import fs from 'fs'
+import LoadingOverlay from 'react-loading-overlay';
 
 class User extends Component{
   state={
@@ -11,12 +11,24 @@ class User extends Component{
     Slogan:'',
     Phone_Number:'',
     Address:'',
-    _id:''
+    _id:'',
+    count:0,
+    isActive:false
   }
 
   componentDidMount(){
-    api.get('get_details').then(res=>{
+    this.getUserdetails();
+    
+  }
+  getUserdetails=()=>{
+    this.setState({isActive:true})
+    api.get('get_details').then(res=>{ 
       this.setState(res.data?.user[0])
+      this.setState({count:res.data?.user?.length})
+      this.setState({isActive:false})
+    }).catch(err=>{
+      console.log(err)
+      this.setState({isActive:false})
     })
   }
 
@@ -26,13 +38,12 @@ class User extends Component{
   }
 
   fileChange=(e)=>{
-    debugger
-    console.log(e.target.files[0].name)
-    this.setState({file: e.target.files })
+    this.setState({file: e.target.files[0] })
   }
 
   handleSubmit=(e)=>{
     e.preventDefault();
+    this.setState({isActive:true})
     const formData = new FormData();
     formData.append("Hotel_Name", this.state.Hotel_Name);
     formData.append("file",this.state.file);
@@ -42,14 +53,18 @@ class User extends Component{
 
     api.post('add_details', formData).then(res=>{
       console.log(res.data);
+      this.getUserdetails();
+      this.setState({isActive:false})
     }).catch(err=>{
       console.log(err)
+      this.setState({isActive:false})
     })
   }
 
   render() {
     return (
       <>
+      	<LoadingOverlay active={this.state.isActive} spinner text='Please wait...'>
         <PanelHeader size="sm" />
         <div className="content">
           <Row>
@@ -64,13 +79,13 @@ class User extends Component{
                       <Col  md="6">
                         <FormGroup>
                           <label>Hotel Name</label>
-                          <Input defaultValue={this.state.Hotel_Name} name='Hotel_Name' onChange={this.handleChange} placeholder="Hotel name" type="text"/>
+                          <Input disabled={this.state.count>0} defaultValue={this.state.Hotel_Name} name='Hotel_Name' onChange={this.handleChange} placeholder="Hotel name" type="text"/>
                         </FormGroup>
                       </Col>
                       <Col  md="6">
                         <FormGroup>
                           <label>Phone number</label>
-                          <Input defaultValue={this.state.Phone_Number} name='Phone_Number' onChange={this.handleChange} placeholder="Phone number" type="number" />
+                          <Input disabled={this.state.count>0} defaultValue={this.state.Phone_Number} name='Phone_Number' onChange={this.handleChange} placeholder="Phone number" type="number" />
                         </FormGroup>
                       </Col>
                     </Row>
@@ -78,7 +93,7 @@ class User extends Component{
                       <Col md="12">
                         <FormGroup>
                           <label>Address</label>
-                          <Input defaultValue={this.state.Address} name='Address' onChange={this.handleChange} placeholder="Hotel Address" type="text"/>
+                          <Input disabled={this.state.count>0} defaultValue={this.state.Address} name='Address' onChange={this.handleChange} placeholder="Hotel Address" type="text"/>
                         </FormGroup>
                       </Col>
                     </Row>
@@ -86,18 +101,18 @@ class User extends Component{
                       <Col md="12">
                         <FormGroup>
                           <label>Slogan</label>
-                          <Input defaultValue={this.state.Slogan} name='Slogan' onChange={this.handleChange} placeholder="Slogan" type="text"/>
+                          <Input disabled={this.state.count>0} defaultValue={this.state.Slogan} name='Slogan' onChange={this.handleChange} placeholder="Slogan" type="text"/>
                         </FormGroup>
                       </Col>
                     </Row>
                     <Row>
                       <Col className="pr-1" md="6">
                         <label>Hotel Logo</label>
-                        <Input name='file' onChange={this.fileChange} type="file"/>
+                        <Input disabled={this.state.count>0} name='file' onChange={this.fileChange} type="file"/>
                       </Col>
                       <Col  md="6">
                         <FormGroup>
-                          <Input type="submit" value='submit' className='btn btn-info bg-info text-white'/>
+                          {this.state.count==0 &&<Input type="submit" value='submit' className='btn btn-info bg-info text-white'/>}
                         </FormGroup>
                       </Col>
                     </Row>
@@ -111,7 +126,8 @@ class User extends Component{
                 <CardBody>
                   <div className="author">
                     <a>
-                      <img alt="..." className="avatar border-gray" src={require("assets/img/mike.jpg").default}/>
+                      {this.state.file==''? <img alt="..." className="avatar border-gray" src={require("assets/img/mike.jpg").default}/> :
+                      <img alt="..." className="avatar border-gray" src={this.state.file}/>}
                       <h5 className="title text-warning">{this.state.Hotel_Name}</h5>
                     </a>
                     <p className="description">{this.state.Phone_Number}</p>
@@ -126,6 +142,7 @@ class User extends Component{
             </Col>
           </Row>
         </div>
+        </LoadingOverlay>
       </>
     );
   }

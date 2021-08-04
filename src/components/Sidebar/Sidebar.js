@@ -16,23 +16,26 @@
 
 */
 /*eslint-disable*/
-import React from "react";
+import React, {useState,useEffect }  from "react";
 import { NavLink } from "react-router-dom";
 import { Nav } from "reactstrap";
 // javascript plugin used to create scrollbars on windows
 import PerfectScrollbar from "perfect-scrollbar";
-
+import api from '../../api/index'
 import logo from "logo-white.svg";
 
 var ps;
 
 function Sidebar(props) {
   const sidebar = React.useRef();
+  const [hotelname, setHotelname] = useState('Hotel Name1');
+
   // verifies if routeName is the one active (in browser input)
   const activeRoute = (routeName) => {
     return props.location.pathname.indexOf(routeName) > -1 ? "active" : "";
   };
   React.useEffect(() => {
+    getProfile();
     if (navigator.platform.indexOf("Win") > -1) {
       ps = new PerfectScrollbar(sidebar.current, {
         suppressScrollX: true,
@@ -45,6 +48,16 @@ function Sidebar(props) {
       }
     };
   });
+  
+  const getProfile = () =>{
+    api.get('get_details').then(res=>{ 
+      if(res.data.user.length>0)
+      setHotelname(res.data?.user[0]?.Hotel_Name)
+    }).catch(err=>{
+      console.log(err)
+    })
+  }
+
   return (
     <div className="sidebar" data-color={props.backgroundColor}>
       <div className="logo">
@@ -53,7 +66,7 @@ function Sidebar(props) {
             {/* <img src={logo} alt="react-logo" /> */}
           </div>
         </a>
-        <a className="simple-text logo-normal">Hotel name</a>
+        <a className="simple-text logo-normal">{hotelname}</a>
       </div>
       <div className="sidebar-wrapper" ref={sidebar}>
         <Nav>

@@ -8,6 +8,7 @@ import {Card,CardBody,CardHeader,CardTitle,Row,Col,UncontrolledDropdown} from "r
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import api from '../api/index'
 import EditSplItems from "./EditSplItems";
+import LoadingOverlay from 'react-loading-overlay';
 
 const useStyles = makeStyles((theme) => ({
   modal: {
@@ -29,15 +30,20 @@ function TodaySpecial() {
   const [items, setItems]= useState([]);
   const [temp, setTemp] = useState('');
   const [editId, setEditId]= useState('')
+  const [isActive, setIsactive] = useState(false);
+
   useEffect(() => {
     getsplItems();
   },[temp]);
 
   const getsplItems = () => {
+    setIsactive(true)
     api.get('/get_today_special').then(res=>{
       setItems(res.data?.user);
+      setIsactive(false)
     }).catch(err=>{
       console.log(err)
+      setIsactive(false)
     })
   }
 
@@ -46,16 +52,32 @@ function TodaySpecial() {
     setOpen(true)
   }
 
-  const handleDelete = (id) => {
-    api.delete('delete_today_special/'+id).then(res=>{
+  const handleActive = (e,id)=>{
+    setIsactive(true)
+    const formData = new FormData();
+    formData.append('Enable_disable',e.target.checked);
+    api.post('enable_today_special/'+id, formData).then(res=>{
+      setIsactive(false)
       getsplItems();
     }).catch(err=>{
       console.log(err)
+      setIsactive(false)
+    })
+  }
+
+  const handleDelete = (id) => {
+    setIsactive(true)
+    api.delete('delete_today_special/'+id).then(res=>{
+      getsplItems();
+      setIsactive(false)
+    }).catch(err=>{
+      console.log(err)
+      setIsactive(false)
     })
   }
 
   return (
-    <>
+    <LoadingOverlay active={isActive} spinner text='Please wait...'>
       <PanelHeader size="sm" />
       <div className="content">
         <Row>
@@ -79,7 +101,7 @@ function TodaySpecial() {
                       <th className='text-center' scope="col">Name</th>
                       <th className='text-center' scope="col">Description</th>
                       <th className='text-center' scope="col">Price</th>
-                      <th className='text-center' scope="col">Image</th>
+                      {/* <th className='text-center' scope="col">Image</th> */}
                       <th className='text-center' scope="col">Category</th>
                       <th className='text-center' scope="col">Veg</th>
                       <th className='text-center' scope="col">Enable/disable</th>
@@ -93,10 +115,10 @@ function TodaySpecial() {
                         <td className='text-center'>{data.Add_items}</td>
                         <td className='text-center'>{data.Item_description}</td>
                         <td className='text-center'>{data.Items_price}</td>
-                        <td className='text-center'><img alt="..." style={{width :'100px',height:'100px'}} src={data.Items_Img}/></td>
+                        {/* <td className='text-center'><img alt="..." style={{width :'100px',height:'100px'}} src={data.Items_Img}/></td> */}
                         <td className='text-center'>{data.Category}</td>
                         <td className='text-center'><Switch color='primary' checked={data.radio1}/></td>
-                        <td className='text-center'><Switch defaultChecked={true}/></td>
+                        <td className='text-center'><Switch checked={data.Enable_disable} onChange={(e)=>handleActive(e,data._id)}/></td>
                         <td >              
                           <i class="fas fa-edit text-info" onClick={()=>handleEdit(data)}/>
                           <i class="fas fa-trash text-danger float-right" color='red' onClick={()=>handleDelete(data._id)}/>
@@ -124,7 +146,7 @@ function TodaySpecial() {
           </Fade>
         </Modal>
       </div>
-    </>
+    </LoadingOverlay>
   );
 }
 
