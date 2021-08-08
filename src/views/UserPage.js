@@ -11,6 +11,7 @@ class User extends Component{
     Slogan:'',
     Phone_Number:'',
     Address:'',
+    Hotel_Logo:'',
     _id:'',
     count:0,
     isActive:false
@@ -125,11 +126,12 @@ class User extends Component{
                 <div className="image bg-warning"></div>
                 <CardBody>
                   <div className="author">
-                    <a>
-                      {this.state.file==''? <img alt="..." className="avatar border-gray" src={require("assets/img/mike.jpg").default}/> :
-                      <img alt="..." className="avatar border-gray" src={this.state.file}/>}
-                      <h5 className="title text-warning">{this.state.Hotel_Name}</h5>
-                    </a>
+                    <>
+                      {this.state.Hotel_Logo==''? <img alt="Logo" className="avatar border-gray" src="https://belmontbec.com/wp-content/themes/oldnevia2/images/shop-01.jpg"/> :
+                      <img alt="Logo" className="avatar border-gray mb-5" src={this.state.Hotel_Logo}/>}
+                      {this.state.Hotel_Logo==''?<h5 className="title text-warning">{this.state.Hotel_Name}</h5>:
+                      <h5 className="title text-warning mt-5">{this.state.Hotel_Name}</h5>}
+                    </>
                     <p className="description">{this.state.Phone_Number}</p>
                   </div>
                   {this.state.Slogan && <p className="description text-center pl-4 pr-4"> &quot;{this.state.Slogan}&quot; </p>}

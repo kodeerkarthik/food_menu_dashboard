@@ -37,7 +37,7 @@ class EditItems extends Component {
     getallCategory=()=>{
         this.setState({isActive:true})
         api.get('/get_menu').then(res=>{
-            this.setState({category:res.data?.user});
+            this.setState({category:res.data?.user.filter(data=>data.Enable_disable)});
             this.setState({isActive:false})
         }).catch(err=>{
             console.log(err)
